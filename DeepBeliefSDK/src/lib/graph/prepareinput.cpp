@@ -15,7 +15,7 @@
 #include "buffer.h"
 #include "matrix_ops.h"
 
-const int kOutputChannels = 3;
+const int kOutputChannels = 1;
 
 static void rescale_image_to_fit(Buffer* input, Buffer* output, bool doFlip);
 static void crop_and_flip_image(Buffer* destBuffer, Buffer* sourceBuffer, int offsetX, int offsetY, bool doFlipHorizontal);

@@ -1,11 +1,11 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=
+CPPFLAGS= 
 
 .PRECIOUS: %.cdat
 
-LIBCPPFLAGS=-Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g
+LIBCPPFLAGS=-Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g -DDO_LOG_OPERATIONS -DSAVE_RESULTS
 LIBLDFLAG=
 LIBLDLIBS=
 
@@ -86,7 +86,15 @@ TOOLCPPFLAGS := -O3 -I ./src/include -g
 TOOLSRCS := $(shell find src/tool -name '*.cpp' -not -name '._*')
 TOOLOBJS := $(subst .cpp,.o,$(TOOLSRCS))
 
-all: jpcnn
+
+# flags for MDig
+PTOOLS := /nobackup/jingpu/tools/PicklingTools153Release/C++
+PTOOLSINC := -I$(PTOOLS)/opencontainers_1_7_9/include -I$(PTOOLS)
+JPINC := -I./src/include -I./src/lib -I./src/lib/include -I./src/lib/graph -I./src/lib/math -I./src/lib/third_party -I./src/lib/utility -I./src/lib/svm -I./src/lib/opengl
+MDCPPFLAGS := -std=c++11 -O $(JPINC) $(PTOOLSINC) -g -fno-strict-aliasing -DLINUX_ -DOC_NEW_STYLE_INCLUDES -Wno-deprecated -pthread -D_REENTRANT
+MDLDLIBS :=  -L$(PTOOLS) -L. -ljpcnn -lptools -lpthread
+
+all: mdnet
 
 %.cdat: %.asm
 	m4 -I ./src/lib/pi/ $< | qpu-asm -o $(basename $@).cdat -c g_$(notdir $(basename $@))Code
@@ -102,16 +110,22 @@ libjpcnn.a: CPPFLAGS=$(LIBCPPFLAGS)
 libjpcnn.a: $(LIBOBJS)
 	ar rcs libjpcnn.a  $(LIBOBJS) 
 
-main.o: src/tool/main.cpp
-	$(CXX) $(CPPFLAGS) -c src/tool/main.cpp -o main.o
 
 jpcnn: CPPFLAGS=$(TOOLCPPFLAGS)
 #jpcnn: libjpcnn.so   $(TOOLOBJS)
 jpcnn:  libjpcnn.a  $(TOOLOBJS)
 	g++ -o jpcnn $(TOOLOBJS) -L. -ljpcnn
 
+# rules for MDig
+mdnet: CPPFLAGS=$(MDCPPFLAGS)
+mdnet: libjpcnn.a src/tool/mdnet.o
+	$(CXX)  src/tool/mdnet.o  -o $@  $(MDLDLIBS)
+
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) -fPIC -c $< -o $(basename $@).o
+
+TAGS:
+	etags --members $(LIBSRCS)
 
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'

@@ -113,7 +113,7 @@ Buffer* Graph::run(Buffer* input, int layerOffset) {
     char inputFilename[FN_LEN];
     snprintf(inputFilename, FN_LEN,
       "%s%03d_input.blob",
-      DUMP_FILE_PATH, inputIndex);
+      DUMP_FILE_PATH, index);
     buffer_dump_to_file(currentInput, inputFilename);
 #endif // SAVE_RESULTS
 

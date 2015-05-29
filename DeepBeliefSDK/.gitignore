@@ -1,2 +1,8 @@
 *.o
+*.a
+*.so
+*~
+*#
+#*
+TAGS
 data/example_networks/imagenet.ntwk

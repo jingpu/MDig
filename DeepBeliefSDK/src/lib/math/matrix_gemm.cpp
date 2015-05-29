@@ -42,7 +42,7 @@
 #define USE_NAIVE_GEMM
 #endif
 
-#define DO_LOG_OPERATIONS
+//#define DO_LOG_OPERATIONS
 
 void matrix_gemm(
   int order,
