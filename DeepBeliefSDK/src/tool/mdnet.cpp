@@ -28,17 +28,16 @@ Buffer* buffer_from_ocarray(const Array<real_4>& array, const std::vector<int32_
 }
 
 
-int main(int argc, const char * argv[]) {
-
-  Val params, mean;
-  //LoadValFromFile("data/mnist_model.p2", params, SERIALIZE_P2);
-  LoadValFromFile("data/mnist_model_reshaped.p", params, SERIALIZE_P0);
-  LoadValFromFile("data/mean_img.p", mean, SERIALIZE_P0);
-
+Graph* new_graph_from_scratch(){
   // manually create a network. see reference: graph.cpp:new_graph_from_file()
   // Network architecture:
   // [conv - relu - pool] - [conv - relu - pool]  - fc - relu - fc - softmax
   Graph* graph = new Graph();
+
+
+  Val params, mean;
+  LoadValFromFile("data/mnist_model_reshaped.p", params, SERIALIZE_P0);
+  LoadValFromFile("data/mean_img.p", mean, SERIALIZE_P0);
 
   graph->_useMemoryMap = false;
   //graph->_isHomebrewed = isHomebrewed; // TODO
@@ -144,62 +143,66 @@ int main(int argc, const char * argv[]) {
   layer9->setName("softmax");
   graph->_layers[9] = layer9;
 
-  
-  graph->printDebugOutput();
+  return graph;
+}
 
-  // substract mean
-  PrepareInput prepareInput(graph->_dataMean, true, false, false, 28, 28, false);
+struct ConvNetFeatures
+{
+  float* features;
+  int length;
+};
+
+int main(int argc, const char * argv[]) {
+
+  //Graph* scratch_graph = new_graph_from_scratch();
+  //save_graph_to_file(scratch_graph, "data/mdnet.ntwk");
+  Graph* graph = new_graph_from_file("data/mdnet.ntwk", false, false);
+  
+  //graph->printDebugOutput();
 
   // load image
   Val var_img, inter_img;
-  Buffer *img, *rescaledInput, *predictions;
-
-  /*
-  LoadValFromFile("data/test_img1.p", var_img, SERIALIZE_P0);
-  img = buffer_from_ocarray(var_img, {1, 28, 28, 1});
-  rescaledInput = prepareInput.run(img);
-  predictions = graph->run(rescaledInput, 0);
-  for(int i = 0; i < 10; i++)
-    cout << i << ": " << predictions->_data[i] <<endl;
-
-  LoadValFromFile("data/test_img4.p", var_img, SERIALIZE_P0);
-  img = buffer_from_ocarray(var_img, {1, 28, 28, 1});
-  rescaledInput = prepareInput.run(img);
-  predictions = graph->run(rescaledInput , 0);
-  for(int i = 0; i < 10; i++)
-    cout << i << ": " << predictions->_data[i] <<endl;
-  */
-
   LoadValFromFile("data/ori_test_img5.p", var_img, SERIALIZE_P0);
-  LoadValFromFile("data/inter_img.p", inter_img, SERIALIZE_P0);
-  img = buffer_from_ocarray(var_img, {1, 28, 28, 1});
+  //LoadValFromFile("data/inter_img.p", inter_img, SERIALIZE_P0);
+  Buffer *img = buffer_from_ocarray(var_img, {1, 28, 28, 1});
 
-  //rescaledInput = prepareInput.run(img);
-  matrix_add_inplace(img, graph->_dataMean, -1.0f);
+  bool useAPI = true;
+  if (!useAPI) {
+    /*********************
+     * use internal subroutines
+     **********************/
 
-  Buffer *expected = buffer_from_ocarray(inter_img["X0"], {28,28,1});
-  //Buffer *expected = buffer_from_ocarray(inter_img["X1"], {14,14,8});
-  //Buffer *expected = buffer_from_ocarray(inter_img["X2"], {7,7,16});
-  //  Buffer *expected = buffer_from_ocarray(inter_img["X3"], {128});
+    // substract mean
+    matrix_add_inplace(img, graph->_dataMean, -1.0f);
+    // run cnn
+    Buffer *predictions = graph->run(img, 0);
+    // print results
+    for(int i = 0; i < 10; i++)
+      cout << graph->_labelNames[i] << ": " << predictions->_data[i] <<endl;
 
-  predictions = graph->run(img, 0);//, expected);
-  for(int i = 0; i < 10; i++)
-    cout << i << ": " << predictions->_data[i] <<endl;
+  } else {
+    /*********************
+     * use libjpcnn API
+     **********************/
 
-
-  /*
-  for(int i = 0; i < 28; i++) {
-    for(int j = 0; j < 28; j++)
-      printf("%.3f (%.3f), ", img->_data[i*28+j], expectedrescaled->_data[i*28+j]);;
-    printf("\n");
+    ConvNetFeatures features = {.features = nullptr, .length = 0};
+    char** predictionsLabels;
+    int predictionsLabelsLength;
+    jpcnn_classify_image(graph,
+                         img,
+                         JPCNN_SKIP_RESCALE,
+                         0,
+                         &(features.features),
+                         &(features.length),
+                         &predictionsLabels,
+                         &predictionsLabelsLength);
+    // print results
+    for(int i = 0; i < predictionsLabelsLength; i++)
+      cout << predictionsLabels[i] << ": " << features.features[i] <<endl;
   }
-  printf("\n");
-  for(int i = 0; i < 28; i++) {
-    for(int j = 0; j < 28; j++)
-      printf("%.3f, ", var_img.at(i*28+j));;
-    printf("\n");
-  }
-  */
-  //cout << var_img << endl;
+
+
+  delete graph;
+
   return 0;
 }

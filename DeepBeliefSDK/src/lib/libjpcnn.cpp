@@ -18,6 +18,7 @@
 #include "graph.h"
 #include "svmutils.h"
 #include "glgemm.h"
+#include "matrix_ops.h"
 
 typedef struct SPredictorInfoStruct {
   struct svm_model* model;
@@ -113,6 +114,7 @@ void jpcnn_classify_image(void* networkHandle, void* inputHandle, unsigned int f
 
   const bool doMultiSample = (flags & JPCNN_MULTISAMPLE);
   const bool doRandomSample = (flags & JPCNN_RANDOM_SAMPLE);
+  const bool skipRescale = (flags & JPCNN_SKIP_RESCALE);
 
   Graph* graph = (Graph*)(networkHandle);
   Buffer* input = (Buffer*)(inputHandle);
@@ -129,11 +131,20 @@ void jpcnn_classify_image(void* networkHandle, void* inputHandle, unsigned int f
     doFlip = true;
     isMeanChanneled = false;
   }
-  const int rescaledSize = graph->_inputSize;
 
-  PrepareInput prepareInput(graph->_dataMean, !doMultiSample, doFlip, doRandomSample, imageSize, rescaledSize, isMeanChanneled);
-  Buffer* rescaledInput = prepareInput.run(input);
+  Buffer* rescaledInput;
+  if (skipRescale) {
+    // substract mean
+    rescaledInput = new Buffer(Dimensions(1, graph->_inputSize, graph->_inputSize, 1));
+    rescaledInput->copyDataFrom(input);
+    matrix_add_inplace(rescaledInput, graph->_dataMean, -1.0f);
+  } else {
+    const int rescaledSize = graph->_inputSize;
+    PrepareInput prepareInput(graph->_dataMean, !doMultiSample, doFlip, doRandomSample, imageSize, rescaledSize, isMeanChanneled);
+    rescaledInput = prepareInput.run(input);
+  }
   Buffer* predictions = graph->run(rescaledInput, layerOffset);
+
 
   *outPredictionsValues = predictions->_data;
   *outPredictionsLength = predictions->_dims.elementCount();
