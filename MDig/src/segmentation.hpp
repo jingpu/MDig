@@ -10,6 +10,9 @@ using namespace cv;
 
 class Segmentation {
     public:
-        void segment(Mat image);
+        void segment(Mat image, vector<vector<Mat> > &digits);
+        void bounding_box(Mat &image, vector<Rect> &boxes);
+        void get_digit(Mat &image, Mat &thresh_output, vector<Rect> &boxes, vector<vector<Mat> > &digits);    
+        bool check_all_zeros(Mat &image, int row_start, int row_end, int col);
 };
 

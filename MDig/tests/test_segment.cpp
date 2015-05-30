@@ -17,7 +17,8 @@ int main(int argc, char** argv)
    imshow("input", src_gray);
    waitKey(0);
    Segmentation seg;
-   seg.segment(src_gray);
+   vector<vector<Mat> > digits;
+   seg.segment(src_gray, digits);
 
 
 
