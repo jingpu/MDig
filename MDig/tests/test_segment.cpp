@@ -20,7 +20,13 @@ int main(int argc, char** argv)
    vector<vector<Mat> > digits;
    seg.segment(src_gray, digits);
 
-
+   for (int i=0; i<digits.size();i++) {
+       for (int j=0; j<digits[i].size(); j++) {
+           cout << digits[i][j].rows << digits[i][j].cols << endl;
+           cv::imshow("segment", digits[i][j]);
+           cv::waitKey(0);
+       }
+   }
 
 	/*** Part 1: Image Classification ***/
 //	ar::Classifier classifier;

@@ -38,7 +38,9 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         //        imshow("Contours", digits[i][j]);
         //        waitKey(0);
         //    }
-        //}  
+        //}
+        Segmentation::pad_rescale(digits);
+  
 }
 
 void Segmentation::bounding_box(Mat &image, vector<Rect> &boxes) {
@@ -134,6 +136,20 @@ bool Segmentation::check_all_zeros(Mat &image, int row_start, int row_end, int c
 }
 
 
-
+void Segmentation::pad_rescale(vector<vector<Mat> > &digits) {
+   int top, bottom, left, right;
+   for (int i=0; i<digits.size(); i++){
+       for (int j=0; j<digits[i].size(); j++) {
+           int num_row = digits[i][j].rows;
+           int num_col = digits[i][j].cols;
+           top = 0.5*(28-num_row);
+           bottom = 28-num_row-top;
+           right = 0.5*(28-num_col);
+           left = 28-num_col-right;
+           copyMakeBorder(digits[i][j],digits[i][j], top, bottom, left, right, BORDER_CONSTANT);
+       }
+   } 
+  
+}
 
 
