@@ -174,7 +174,8 @@ Buffer* Graph::run(Buffer* input, int layerOffset) {
 }
 
 void Graph::printDebugOutput() {
-  fprintf(stderr, "************************\nJPCNN Network with %d layers\n", _layersLength);
+  fprintf(stderr, "************************\n");
+  fprintf(stderr, "JPCNN Network with %d layers, input size: %u\n", _layersLength, _inputSize);
   for (int index = 0; index < _layersLength; index += 1) {
     BaseNode* layer = _layers[index];
     fprintf(stderr, "%s\n", layer->debugString());
@@ -246,13 +247,17 @@ Graph* new_graph_from_file(const char* filename, int useMemoryMap, int isHomebre
   return result;
 }
 
-void save_graph_to_file(Graph* graph, const char* filename) {
+void save_graph_to_file(const Graph* graph, const char* filename) {
 
   SBinaryTag* graphDict = create_dict_tag();
 
   SBinaryTag* dataMeanTag = buffer_to_tag_dict(graph->_dataMean);
   graphDict = add_tag_to_dict(graphDict, "data_mean", dataMeanTag);
   free(dataMeanTag);
+
+  SBinaryTag* inputSizeTag = create_uint_tag(graph->_inputSize);
+  graphDict = add_tag_to_dict(graphDict, "input_size", inputSizeTag);
+  free(inputSizeTag);
 
   SBinaryTag* layersTag = create_list_tag();
   for (int index = 0; index < graph->_layersLength; index += 1) {

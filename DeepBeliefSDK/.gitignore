@@ -4,5 +4,7 @@
 *~
 *#
 #*
+jpcnn
+mdnet
 TAGS
 data/example_networks/imagenet.ntwk

@@ -14,6 +14,7 @@ extern "C" {
 
 #define JPCNN_MULTISAMPLE      (1 << 0)
 #define JPCNN_RANDOM_SAMPLE    (1 << 1)
+#define JPCNN_SKIP_RESCALE     (1 << 2)
 
 void* jpcnn_create_network(const char* filename);
 void jpcnn_destroy_network(void* networkHandle);

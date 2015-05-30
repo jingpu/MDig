@@ -84,8 +84,8 @@ SBinaryTag* NeuronNode::toTag() {
   resultDict = add_tag_to_dict(resultDict, "spec", specDict);
   free(specDict);
 
-  const bool wantTransposedOutput = true;
-  const int outputBitDepth = 8;
+  const bool wantTransposedOutput = false;
+  const int outputBitDepth = 32;
 
   if (wantTransposedOutput != _areWeightsTransposed) {
     _weights->transpose(); // First transpose so they match
