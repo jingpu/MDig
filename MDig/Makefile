@@ -30,5 +30,8 @@ test_convnet:  tests/test_convnet.o $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
 	./$@
 
+test_segment:  tests/test_segment.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'
