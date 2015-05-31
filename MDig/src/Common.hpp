@@ -23,6 +23,8 @@ struct ConvNetFeatures
 {
   float* features;
   int length;
+  char** labels;
+  int labelsLength;
 };
 
 #endif
