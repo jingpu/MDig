@@ -130,3 +130,4 @@ TAGS:
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'
 	find . -iname "*.do" -exec rm '{}' ';'
+	rm -rf obj libs
