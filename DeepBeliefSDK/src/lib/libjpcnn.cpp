@@ -52,7 +52,7 @@ void jpcnn_destroy_image_buffer(void* imageHandle) {
 }
 
 void* jpcnn_create_image_buffer_from_uint8_data(unsigned char* pixelData, int width, int height, int channels, int rowBytes, int reverseOrder, int doRotate) {
-  const Dimensions imageDims(height, width, channels);
+  const Dimensions imageDims(1, height, width, channels);
   Buffer* image = new Buffer(imageDims);
   unsigned char* const sourceDataStart = pixelData;
   jpfloat_t* const destDataStart = image->_data;
@@ -106,6 +106,27 @@ void* jpcnn_create_image_buffer_from_uint8_data(unsigned char* pixelData, int wi
       }
     }
   }
+  
+  return (void*)(image);
+}
+  
+void* jpcnn_create_batched_image_buffer_from_uint8_data(unsigned char** pixelData, int numOfImages, int width, int height, int channels) {
+  const Dimensions imageDims(numOfImages, height, width, channels);
+  Buffer* image = new Buffer(imageDims);
+
+  const int valuesPerImage = width * height * channels;
+  jpfloat_t* const destDataStart = image->_data;
+  
+  for (int i = 0; i < numOfImages; ++i) {
+    unsigned char* source = pixelData[i];
+    unsigned char* const sourceEnd = (source + valuesPerImage);
+    jpfloat_t* dest = (destDataStart + (i * valuesPerImage));
+    while (source < sourceEnd) {
+      *dest = (jpfloat_t)(*source);
+      dest += 1;
+      source += 1;
+    }
+  }
 
   return (void*)(image);
 }
@@ -135,7 +156,7 @@ void jpcnn_classify_image(void* networkHandle, void* inputHandle, unsigned int f
   Buffer* rescaledInput;
   if (skipRescale) {
     // substract mean
-    rescaledInput = new Buffer(Dimensions(1, graph->_inputSize, graph->_inputSize, 1));
+    rescaledInput = new Buffer(Dimensions(input->_dims[0], graph->_inputSize, graph->_inputSize, 1));
     rescaledInput->copyDataFrom(input);
     matrix_add_inplace(rescaledInput, graph->_dataMean, -1.0f);
   } else {
