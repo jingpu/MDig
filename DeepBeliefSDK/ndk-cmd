@@ -1,0 +1,2 @@
+
+$NDK_ROOT/ndk-build APP_BUILD_SCRIPT=/horowitz/users/jingpu/github/MDig/DeepBeliefSDK/Android.mk NDK_APPLICATION_MK=/horowitz/users/jingpu/github/MDig/DeepBeliefSDK/Application.mk NDK_PROJECT_PATH=/horowitz/users/jingpu/github/MDig/DeepBeliefSDK

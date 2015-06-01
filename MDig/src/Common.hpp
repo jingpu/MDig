@@ -18,11 +18,5 @@ typedef cv::Mat GrayscaleImage;
 typedef std::vector<cv::Point2f> PointArray;
     
 typedef std::function<void(const PointArray&, const PointArray&)> MatchHandler;
-    
-struct ConvNetFeatures
-{
-  float* features;
-  int length;
-};
 
 #endif

@@ -15,6 +15,8 @@ LDLIBS= -L$(OCV)/lib -lopencv_core -lopencv_highgui \
 SRCS := $(shell find src -name '*.cpp' -not -name '._*')
 OBJS := $(subst .cpp,.o,$(SRCS))
 
+.PHONY: all tests test_convnet test_segment
+
 all: tests
 
 %.o: %.cpp

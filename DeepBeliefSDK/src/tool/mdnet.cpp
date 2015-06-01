@@ -19,11 +19,19 @@ Buffer* buffer_from_ocarray(const Array<real_4>& array, const std::vector<int32_
   int32_t dimensionsCount = dim.size();
   const int32_t *dimensions = &dim[0];
   Dimensions dims(dimensions, dimensionsCount);
-  assert(array.length() == dims.elementCount());
+  assert(dims.elementCount() % array.length() == 0);
 
   Buffer*  buffer = new Buffer(dims);
-  memcpy(buffer->_data, array.data(), array.length() * sizeof(real_4));
+  assert(sizeof(real_4) == sizeof(*(buffer->_data)));
 
+  // fill buffer using several copyies of array data
+  int32_t copiedLength = 0;
+  while (copiedLength != dims.elementCount()) {
+    memcpy(buffer->_data+copiedLength, array.data(),
+	   array.length() * sizeof(real_4));
+    copiedLength += array.length();
+  }
+  
   return buffer;
 }
 
@@ -158,18 +166,21 @@ int main(int argc, const char * argv[]) {
   //save_graph_to_file(scratch_graph, "data/mdnet.ntwk");
   Graph* graph = new_graph_from_file("data/mdnet.ntwk", false, false);
   
-  //graph->printDebugOutput();
+  graph->printDebugOutput();
 
   // load image
   Val var_img, inter_img;
   LoadValFromFile("data/ori_test_img5.p", var_img, SERIALIZE_P0);
   //LoadValFromFile("data/inter_img.p", inter_img, SERIALIZE_P0);
-  Buffer *img = buffer_from_ocarray(var_img, {1, 28, 28, 1});
 
   bool useAPI = true;
+  int numOfImages = 2;
+
+  Buffer *img = buffer_from_ocarray(var_img, {numOfImages, 28, 28, 1});
+
   if (!useAPI) {
     /*********************
-     * use internal subroutines
+      * use internal subroutines
      **********************/
 
     // substract mean
@@ -177,28 +188,29 @@ int main(int argc, const char * argv[]) {
     // run cnn
     Buffer *predictions = graph->run(img, 0);
     // print results
-    for(int i = 0; i < 10; i++)
-      cout << graph->_labelNames[i] << ": " << predictions->_data[i] <<endl;
+    for(int i = 0; i < 10*numOfImages; i++)
+      cout << graph->_labelNames[i%10] << ": " << predictions->_data[i] <<endl;
 
   } else {
     /*********************
      * use libjpcnn API
      **********************/
-
     ConvNetFeatures features = {.features = nullptr, .length = 0};
     char** predictionsLabels;
     int predictionsLabelsLength;
     jpcnn_classify_image(graph,
-                         img,
-                         JPCNN_SKIP_RESCALE,
-                         0,
-                         &(features.features),
-                         &(features.length),
-                         &predictionsLabels,
-                         &predictionsLabelsLength);
+			 img,
+			 JPCNN_SKIP_RESCALE,
+			 0,
+			 &(features.features),
+			 &(features.length),
+			 &predictionsLabels,
+			 &predictionsLabelsLength);
     // print results
-    for(int i = 0; i < predictionsLabelsLength; i++)
-      cout << predictionsLabels[i] << ": " << features.features[i] <<endl;
+    for(int i = 0; i < features.length; i++)
+      cout << predictionsLabels[i % predictionsLabelsLength] << ": " 
+	   << features.features[i] <<endl;
+    
   }
 
 
