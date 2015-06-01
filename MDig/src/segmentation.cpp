@@ -15,10 +15,9 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         Mat threshold_output;
         Mat rescale_output;
         int threshold_value;       
-
+      
         //namedWindow("Contours", CV_WINDOW_AUTOSIZE);
         Segmentation::preprocess(image, rescale_output, threshold_output, threshold_value);
-
         vector<Rect> boxes;
         Segmentation::bounding_box(threshold_output, boxes);
         Segmentation::merge_box(boxes);
@@ -28,6 +27,7 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         /*for (int i = 0; i < boxes.size(); i++) {
             rectangle(rescale_output, boxes[i].tl(), boxes[i].br(), Scalar(100, 100, 100), 2, 8, 0);
         }
+        //imwrite("results/contours.jpg", rescale_output);
         imshow("Contours", rescale_output);       
         waitKey(0);
         */
@@ -49,6 +49,8 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         if (image.rows > 480 || image.cols > 640) {
             resize(image, rescale_output, Size(640, 480), 0,0, INTER_NEAREST);
         }
+        else 
+            image.copyTo(rescale_output);
         double minVal, maxVal;
         Point minLoc;
         Point maxLoc;
@@ -70,7 +72,7 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         blur(rescale_output, edges, Size(3,3));
        // imshow("blur image", edges);
        // waitKey(0);
-        Canny(edges, edges, 15, 45, 3);
+        Canny(edges, edges, 13, 39, 3);
        // imshow("edge image", edges);
        // waitKey(0);
         //output.create(Size(640,480), CV_8UC1); 
@@ -88,7 +90,11 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         } */ 
         vector<Rect> boxes;
         Segmentation:bounding_box(edges, boxes);
-      
+        /*for (int i=0; i < boxes.size(); i++) {
+            rectangle(edges, boxes[i].tl(), boxes[i].br(), Scalar(100, 100, 100), 2, 8, 0);
+        }
+        imwrite("results/edges.jpg", edges);
+        */
         for(int i=0; i<output.rows; i++) {
            for(int j=0; j<output.cols; j++) {
               bool in_box = false;
@@ -127,7 +133,6 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
                }
            }
         } 
-       
         imshow("threshold image", output);
         waitKey(0); 
 }
@@ -252,8 +257,6 @@ void Segmentation::pad_rescale(vector<vector<Mat> > &digits, int &threshold_valu
    //namedWindow("digit", CV_WINDOW_AUTOSIZE);
    for (int i=0; i<digits.size(); i++){
        for (int j=0; j<digits[i].size(); j++) {
-           imshow("Contours", digits[i][j]);
-           waitKey(0);
            digits[i][j] = Scalar::all(255)- digits[i][j];
            threshold(digits[i][j], digits[i][j], threshold_value, 255, THRESH_BINARY);
            int num_row = digits[i][j].rows;
@@ -266,6 +269,9 @@ void Segmentation::pad_rescale(vector<vector<Mat> > &digits, int &threshold_valu
            right = 0.5*(28-digits[i][j].cols);
            left = 28-digits[i][j].cols-right;
            copyMakeBorder(digits[i][j],digits[i][j], top, bottom, left, right, BORDER_CONSTANT);
+           //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", digits[i][j]);
+           imshow("Contours", digits[i][j]);
+           waitKey(0);
            
        }
    } 
