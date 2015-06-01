@@ -11,15 +11,17 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-   Mat im = imread("res/combine_img.JPEG");
+   //Mat im = imread("res/combine_img.JPEG");
+   Mat im = imread("res/real_img.jpg");
    Mat src_gray;
    cvtColor(im, src_gray, CV_BGR2GRAY);
-   imshow("input", src_gray);
-   waitKey(0);
+   //imshow("input", src_gray);
+   //waitKey(0);
    Segmentation seg;
    vector<vector<Mat> > digits;
    seg.segment(src_gray, digits);
 
+   namedWindow("segment", CV_WINDOW_AUTOSIZE);
    for (int i=0; i<digits.size();i++) {
        for (int j=0; j<digits[i].size(); j++) {
            cout << digits[i][j].rows << digits[i][j].cols << endl;

@@ -30,6 +30,11 @@ test_convnet:  tests/test_convnet.o $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
 	./$@
 
+test_edge:  tests/test_edge.o
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@  res/real_img.jpg
+
+
 test_segment:  tests/test_segment.o $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
 	./$@
