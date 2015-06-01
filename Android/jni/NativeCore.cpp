@@ -23,8 +23,8 @@ JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_DestroyNativ
 	delete (MDApp*)(addr_native_controller);
 }
 
-JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_HandleFrame
-  (JNIEnv *, jobject, jlong addr_native_controller, jlong addr_rgba, jboolean is_init)
+JNIEXPORT jobjectArray JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_HandleFrame
+  (JNIEnv *env, jobject, jlong addr_native_controller, jlong addr_rgba, jboolean is_init)
 {
 	MDApp* app = (MDApp*)(addr_native_controller);
 	cv::Mat* frame = (cv::Mat*)(addr_rgba);
@@ -34,8 +34,22 @@ JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_HandleFrame
 	}
 	else
 	{
-		app->process_frame(*frame);
+		std::vector<std::string >  cppStrings;
+
+		cppStrings = app->process_frame(*frame);
+
+		// convert std::vector<std::string> to java.lang.String[]
+		jobjectArray ret;
+		ret= (jobjectArray)env->NewObjectArray(cppStrings.size(),
+		         env->FindClass("java/lang/String"),
+		         env->NewStringUTF(""));
+		for(int i=0; i<cppStrings.size() ;i++) {
+		        env->SetObjectArrayElement(ret,i,env->NewStringUTF(cppStrings[i].c_str()));
+		}
+		return ret;
 	}
+
+
 }
 
 JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_SetDataLocation

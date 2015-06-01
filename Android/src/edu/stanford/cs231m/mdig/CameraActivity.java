@@ -189,14 +189,26 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("Continue with this pictures?").setTitle(
 				"Extract numbers");
+
+		final AlertDialog.Builder resultbuilder = new AlertDialog.Builder(this);
+		resultbuilder.setTitle("Extracted results");
 		builder.setPositiveButton("Continue",
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 						// TODO remove the extra image load in java
 						Mat frame = org.opencv.highgui.Highgui
 								.imread(mImagePaths);
-						HandleFrame(mNativeController,
+						String[] numbers = HandleFrame(mNativeController,
 								frame.getNativeObjAddr(), mRequiresInit);
+
+						StringBuilder sb = new StringBuilder(String.format(
+								"Find %d number:\n", numbers.length));
+						for (String s : numbers)
+							sb.append(s+"\n");
+						
+						resultbuilder.setMessage(sb);
+						AlertDialog resultDialog = resultbuilder.create();
+						resultDialog.show();
 					}
 				});
 		builder.setNegativeButton("Restart",
@@ -242,7 +254,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 
     public native void DestroyNativeController(long addr_native_controller);
 
-    public native void HandleFrame(long addr_native_controller, long addr_rgba, boolean is_init);
+	public native String[] HandleFrame(long addr_native_controller,
+			long addr_rgba, boolean is_init);
 
     public native void SetDataLocation(String path);
 }

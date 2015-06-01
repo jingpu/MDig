@@ -78,7 +78,7 @@ JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_DestroyNativ
  * Method:    HandleFrame
  * Signature: (JJZ)V
  */
-JNIEXPORT void JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_HandleFrame
+JNIEXPORT jobjectArray JNICALL Java_edu_stanford_cs231m_mdig_CameraActivity_HandleFrame
   (JNIEnv *, jobject, jlong, jlong, jboolean);
 
 /*
