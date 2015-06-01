@@ -5,7 +5,7 @@ CPPFLAGS=
 
 .PRECIOUS: %.cdat
 
-LIBCPPFLAGS=-Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g
+LIBCPPFLAGS= -Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g
 LIBLDFLAG=
 LIBLDLIBS=
 
@@ -130,4 +130,6 @@ TAGS:
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'
 	find . -iname "*.do" -exec rm '{}' ';'
+	find . -iname "*.s" -exec rm '{}' ';'
+	find . -iname "*.ii" -exec rm '{}' ';'
 	rm -rf obj libs

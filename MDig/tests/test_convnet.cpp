@@ -20,23 +20,44 @@ int main(int argc, char** argv)
    
 
   Segmentation seg;
-  vector<vector<Mat> > digits;
-  seg.segment(grayscaleImage, digits);
+  vector<vector<Mat> > digitImages;
+  seg.segment(grayscaleImage, digitImages);
   vector<int> numbers;
  
   //Construct convolutional neural network.
   ConvNet net(PathForResource("mdnet.ntwk"));
-  
 
-  bool useBatch = true;
-
-  for (int m=0; m<digits.size(); m++ ) {
-    vector<char> d = net.extract_digits(digits[m], useBatch);
-    cout << "number = ";
-    for (char c : d) {
-      cout << c;
+  for (int b = 0; b < 2; ++b) {
+    for (int m=0; m<digitImages.size(); m++ ) {
+      bool useBatch = (b == 1);
+      cout << "useBatch = " << b << endl;
+      vector<Mat> v;
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      v.insert(v.end(), digitImages[m].begin(), digitImages[m].end());
+      vector<char> digits = net.extract_digits(v, useBatch);
+      cout << "number = ";
+      for (char c : digits) {
+	cout << c;
+      }
+      cout << endl;
     }
-    cout << endl;
-
   }
 }

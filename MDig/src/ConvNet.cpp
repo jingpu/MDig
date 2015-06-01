@@ -1,6 +1,9 @@
 #include "ConvNet.hpp"
 #include "libjpcnn.h"
 
+#include <ctime>
+
+static const char* TAG = "ConvNet";
 
 class ConvNetInput
 {
@@ -62,6 +65,7 @@ ConvNetFeatures ConvNet::extract_features(const GrayscaleImage& image)
 {
   ConvNetFeatures features = {.features = nullptr, .length = 0, .labels = nullptr, .labelsLength = 0};
   ConvNetInput input(image);
+
   jpcnn_classify_image(net_,
 		       input.data,
 		       JPCNN_SKIP_RESCALE,
@@ -77,6 +81,7 @@ ConvNetFeatures ConvNet::extract_batched_features(const std::vector<GrayscaleIma
 {
   ConvNetFeatures features = {.features = nullptr, .length = 0, .labels = nullptr, .labelsLength = 0};
   ConvNetInput input(images);
+
   jpcnn_classify_image(net_,
 		       input.data,
 		       JPCNN_SKIP_RESCALE,
@@ -85,6 +90,7 @@ ConvNetFeatures ConvNet::extract_batched_features(const std::vector<GrayscaleIma
 		       &(features.length),
 		       &(features.labels),
 		       &(features.labelsLength));
+
   return features;
 }
 
@@ -144,6 +150,8 @@ std::vector<char>
 ConvNet::extract_digits(const std::vector<GrayscaleImage>& images, bool useBatch){
   std::vector<char> result;
 
+  clock_t beginTime = clock();
+
   if (!useBatch) {
     for(const auto im : images) {
       ConvNetFeatures features = extract_features(im);
@@ -153,5 +161,9 @@ ConvNet::extract_digits(const std::vector<GrayscaleImage>& images, bool useBatch
     ConvNetFeatures features = extract_batched_features(images);   
     result = get_digits(features);
   }
+
+  clock_t endTime = clock();
+  double elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+  LOG_DEBUG(TAG, "extracted %d digit(s) in %f sec.", images.size(), elapsed_secs);
   return result;
 }
