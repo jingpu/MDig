@@ -25,7 +25,11 @@ all: tests
 main:  $(OBJS)
 	$(CXX) $(LDFLAGS) -o main $(OBJS) $(LDLIBS)
 
-tests: test_convnet
+tests: test_app
+
+test_app:  tests/test_app.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@
 
 
 test_convnet:  tests/test_convnet.o $(OBJS)
@@ -35,7 +39,6 @@ test_convnet:  tests/test_convnet.o $(OBJS)
 test_edge:  tests/test_edge.o
 	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
 	./$@  res/real_img.jpg
-
 
 test_segment:  tests/test_segment.o $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
