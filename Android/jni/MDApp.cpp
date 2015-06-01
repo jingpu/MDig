@@ -18,9 +18,8 @@ void MDApp::initialize()
 
 std::vector<std::string > MDApp::process_frame(ColorImage& frame)
 {
+  LOG_DEBUG(TAG, "enter process_frame()");
   assert(has_been_initialized_ && "Must be initialized before calling process_frame!");
-  assert(frame.type()==CV_8UC4 && "Frame type must be RGB!");
-
   cv::Mat grayscaleImage;
   convert_to_grayscale(frame, grayscaleImage);
    
@@ -41,5 +40,6 @@ std::vector<std::string > MDApp::process_frame(ColorImage& frame)
 
 void MDApp::convert_to_grayscale(const ColorImage& colorImage, GrayscaleImage& grayscaleImage)
 {
-    cv::cvtColor(colorImage, grayscaleImage, CV_BGRA2GRAY);
+	assert(colorImage.type()==CV_8UC3 && "Frame type must be RGB!");
+    cv::cvtColor(colorImage, grayscaleImage, CV_RGB2GRAY);
 }

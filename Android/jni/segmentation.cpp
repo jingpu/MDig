@@ -15,9 +15,9 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         Mat threshold_output;
         Mat rescale_output;
         int threshold_value;       
-
+      
+        //namedWindow("Contours", CV_WINDOW_AUTOSIZE);
         Segmentation::preprocess(image, rescale_output, threshold_output, threshold_value);
-
         vector<Rect> boxes;
         Segmentation::bounding_box(threshold_output, boxes);
         Segmentation::merge_box(boxes);
@@ -30,18 +30,19 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         if (image.rows > 480 || image.cols > 640) {
             resize(image, rescale_output, Size(640, 480), 0,0, INTER_NEAREST);
         }
+        else 
+            image.copyTo(rescale_output);
         double minVal, maxVal;
         Point minLoc;
         Point maxLoc;
         Mat edges;
         blur(rescale_output, edges, Size(3,3));
-        Canny(edges, edges, 15, 45, 3);
+        Canny(edges, edges, 13, 39, 3);
         output = Scalar::all(255)- rescale_output;
         //adaptiveThreshold(output, output, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,11, 0);
         vector<uchar> pixels;
         vector<Rect> boxes;
         Segmentation:bounding_box(edges, boxes);
-      
         for(int i=0; i<output.rows; i++) {
            for(int j=0; j<output.cols; j++) {
               bool in_box = false;
@@ -76,7 +77,7 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
                }
            }
         } 
- }
+}
 
 
 void Segmentation::bounding_box(Mat &image, vector<Rect> &boxes) {
@@ -97,8 +98,7 @@ void Segmentation::bounding_box(Mat &image, vector<Rect> &boxes) {
             boxes.push_back(boundRect[i]);
         }
     } 
-    
- }
+}
 
 void Segmentation::merge_box(vector<Rect> &boxes) {
     int i = 0;

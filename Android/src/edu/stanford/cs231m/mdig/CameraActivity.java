@@ -5,16 +5,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.android.JavaCameraView;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.res.AssetManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -30,7 +35,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 
     private static final String DEPLOY_RESOURCES_DIR_NAME = "deploy";
 
-    private JavaCameraView mCameraView;
+	private CameraView mCameraView;
+	private String mImagePaths;
 
     private long mNativeController = 0;
 
@@ -86,6 +92,36 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
         }
     }
 
+	static private File getPictureStorageDir() {
+		File picDir = new File(Environment.getExternalStorageDirectory(),
+				"MDig-Pictures");
+		if (!picDir.exists()) {
+			try {
+				picDir.mkdir();
+			} catch (Exception e) {
+				Log.e(TAG, "Encountered exception while creating picture dir.");
+				e.printStackTrace();
+			}
+		}
+		return picDir;
+	}
+
+	static private File makeUniqueImagePath() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss.SSS",
+				Locale.US);
+		File picDir = getPictureStorageDir();
+		String imageName = sdf.format(new Date()) + ".jpg";
+		return new File(picDir, imageName);
+	}
+
+	private void takePicture() {
+		File imageFile = makeUniqueImagePath();
+		mCameraView.takePicture(imageFile.getPath());
+		Toast.makeText(this, "Picture saved as " + imageFile.getName(),
+				Toast.LENGTH_SHORT).show();
+		mImagePaths = imageFile.getPath();
+	}
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -96,7 +132,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 
         // Setup our camera view
         setContentView(R.layout.activity_camera);
-        mCameraView = (JavaCameraView) findViewById(R.id.primary_camera_view);
+		mCameraView = (CameraView) findViewById(R.id.primary_camera_view);
         mCameraView.setVisibility(SurfaceView.VISIBLE);
         mCameraView.setCvCameraViewListener(this);
         mCameraView.setMaxFrameSize(640, 480);
@@ -145,15 +181,41 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
     @Override
     public boolean onTouch(View view, MotionEvent event)
     {
-        mRequiresInit = true;
-        mIsReadyForTracking = true;
+		takePicture();
+
+		// File picDir = getPictureStorageDir();
+		// File picFile = new File(picDir, "test.jpg");
+		// mImagePaths = picFile.getPath();
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Continue with this pictures?").setTitle(
+				"Extract numbers");
+		builder.setPositiveButton("Continue",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						// TODO remove the extra image load in java
+						Mat frame = org.opencv.highgui.Highgui
+								.imread(mImagePaths);
+						HandleFrame(mNativeController,
+								frame.getNativeObjAddr(), mRequiresInit);
+					}
+				});
+		builder.setNegativeButton("Restart",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						File imgFile = new File(mImagePaths);
+						imgFile.delete();
+					}
+				});
+		AlertDialog dialog = builder.create();
+		dialog.show();
         return false;
     }
 
     @Override
     public void onCameraViewStarted(int width, int height)
     {
-        Toast.makeText(this, "Tap the screen to begin tracking.", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Tap the screen to take a picture.",
+				Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -164,12 +226,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame)
     {
-		Mat frame = inputFrame.rgba();
-        if (mIsReadyForTracking)
-        {
-			HandleFrame(mNativeController, frame.getNativeObjAddr(), false);
-        }
-		return frame;
+		return inputFrame.rgba();
     }
 
     static

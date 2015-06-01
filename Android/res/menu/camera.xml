@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="edu.stanford.cvgl.artsy.CameraActivity" >
+    tools:context="edu.stanford.cs231m.mdig.CameraActivity" >
 
     <item
         android:id="@+id/action_settings"
