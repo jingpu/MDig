@@ -10,12 +10,12 @@ using namespace cv;
 
 class Segmentation {
     public:
-        void segment(Mat image, vector<vector<Mat> > &digits);
+        void segment(Mat image, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices);
         void preprocess(Mat &image, Mat &rescale_output,  Mat &output, int &threshold_value );
         void bounding_box(Mat &image, vector<Rect> &boxes);
         void merge_box(vector<Rect> &boxes);
-        void get_digit(Mat &image, Mat &thresh_output, vector<Rect> &boxes, vector<vector<Mat> > &digits);    
-        void pad_rescale(vector<vector<Mat> > &digits, int &threshold_value);    
-        bool check_all_zeros(Mat &image, int row_start, int row_end, int col);
+        void get_digit(const Mat &image, const Mat &thresh_output, const vector<Rect> &boxes, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices);    
+        void pad_rescale(vector<Mat> &patches, int &threshold_value);    
+        bool check_all_zeros(const Mat &image, int row_start, int row_end, int col);
 };
 

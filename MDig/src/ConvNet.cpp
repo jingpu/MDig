@@ -112,7 +112,7 @@ ConvNet::get_digit(const ConvNetFeatures& feature){
   if(max_idx != -1 && max_prob > threshold_)
     result = (feature.labels[max_idx])[0]; // first char of the label
   else
-    result = 0;
+    result = 'x';
 
   return result;
 }
@@ -125,7 +125,7 @@ ConvNet::get_digits(const ConvNetFeatures& feature){
   
   const int numOfDigits = feature.length / feature.labelsLength;
   for (int i = 0; i < numOfDigits; ++i) {
-    char c = 0;
+    char c;
     
     int max_idx = -1;
     float max_prob = 0;
@@ -139,6 +139,8 @@ ConvNet::get_digits(const ConvNetFeatures& feature){
   
     if(max_idx != -1 && max_prob > threshold_)
       c = (feature.labels[max_idx])[0]; // first char of the label
+    else
+      c = 'x';
 
     result.push_back(c);
   }

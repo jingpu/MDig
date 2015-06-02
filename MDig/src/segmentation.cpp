@@ -11,7 +11,7 @@
 using namespace std;
 using namespace cv;
 
-void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
+void Segmentation::segment(Mat image, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices) {
         Mat threshold_output;
         Mat rescale_output;
         int threshold_value;       
@@ -31,7 +31,7 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         imshow("Contours", rescale_output);       
         waitKey(0);
         */
-        Segmentation::get_digit(rescale_output, threshold_output, boxes, digits);
+        Segmentation::get_digit(rescale_output, threshold_output, boxes, digitPatches, numberIndices);
         
         //cout << digits.size() << endl;
         //for (int i = 0; i < digits.size(); i++) {
@@ -41,7 +41,7 @@ void Segmentation::segment(Mat image, vector<vector<Mat> > &digits) {
         //        waitKey(0);
         //    }
         //}
-        Segmentation::pad_rescale(digits, threshold_value);
+        Segmentation::pad_rescale(digitPatches, threshold_value);
   
 }
 
@@ -199,9 +199,9 @@ void Segmentation::merge_box(vector<Rect> &boxes) {
     }              
 }
 
-void Segmentation::get_digit(Mat &image, Mat &thresh_output, vector<Rect> &boxes, vector<vector<Mat> > &digits) {
+void Segmentation::get_digit(const Mat &image, const Mat &thresh_output, const vector<Rect> &boxes, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices) {
    for (int i = 0; i < boxes.size(); i++) {
-       vector<Mat> box_digits;
+       vector<int> digitIndices;
        bool in_digit = false, prev_in_digit = false;
        int begin_segment = boxes[i].x, start, end;
        for (int j = boxes[i].x; j <= boxes[i].x + boxes[i].width; j++) {
@@ -220,7 +220,8 @@ void Segmentation::get_digit(Mat &image, Mat &thresh_output, vector<Rect> &boxes
                   Rect box(start, boxes[i].y, end - start, boxes[i].height);
                   Mat new_digit;
                   image(box).copyTo(new_digit);
-                  box_digits.push_back(new_digit);
+		  digitIndices.push_back(digitPatches.size()); // Trick here: digitPatches.size() is the index of the next appended element
+		  digitPatches.push_back(new_digit);
                } else {
                   prev_in_digit = true;
                }
@@ -238,13 +239,14 @@ void Segmentation::get_digit(Mat &image, Mat &thresh_output, vector<Rect> &boxes
            Rect box(start, boxes[i].y, end - start, boxes[i].height);
            Mat new_digit;
            image(box).copyTo(new_digit);
-           box_digits.push_back(new_digit);
+	   digitIndices.push_back(digitPatches.size()); // Trick here: digitPatches.size() is the index of the next appended element
+	   digitPatches.push_back(new_digit);
        }
-       digits.push_back(box_digits);
+       numberIndices.push_back(digitIndices);
    }    
 }
 
-bool Segmentation::check_all_zeros(Mat &image, int row_start, int row_end, int col) {
+bool Segmentation::check_all_zeros(const Mat &image, int row_start, int row_end, int col) {
    for (int i = row_start; i <= row_end; i++) {
        if (image.at<uint8_t>(i, col) != 0) return false;
    }
@@ -252,30 +254,28 @@ bool Segmentation::check_all_zeros(Mat &image, int row_start, int row_end, int c
 }
 
 
-void Segmentation::pad_rescale(vector<vector<Mat> > &digits, int &threshold_value) {
-   int top, bottom, left, right;
-   //namedWindow("digit", CV_WINDOW_AUTOSIZE);
-   for (int i=0; i<digits.size(); i++){
-       for (int j=0; j<digits[i].size(); j++) {
-           digits[i][j] = Scalar::all(255)- digits[i][j];
-           threshold(digits[i][j], digits[i][j], threshold_value, 255, THRESH_BINARY);
-           int num_row = digits[i][j].rows;
-           int num_col = digits[i][j].cols;
-           if (num_row >20 || num_col > 20) {
-              resize(digits[i][j], digits[i][j], Size(20, 20), 0,0, INTER_NEAREST);
-           }
-           top = 0.5*(28-digits[i][j].rows);
-           bottom = 28-digits[i][j].rows-top;
-           right = 0.5*(28-digits[i][j].cols);
-           left = 28-digits[i][j].cols-right;
-           copyMakeBorder(digits[i][j],digits[i][j], top, bottom, left, right, BORDER_CONSTANT);
-           //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", digits[i][j]);
-           imshow("Contours", digits[i][j]);
-           waitKey(0);
-           
-       }
-   } 
-  
+void Segmentation::pad_rescale(vector<Mat>  &patches, int &threshold_value) {
+  for (auto&& im : patches) {
+    int top, bottom, left, right;
+    im = Scalar::all(255)- im;
+    threshold(im, im, threshold_value, 255, THRESH_BINARY);
+    int num_row = im.rows;
+    int num_col = im.cols;
+    if (num_row >20 || num_col > 20) {
+      resize(im, im, Size(20, 20), 0,0, INTER_NEAREST);
+    }
+    top = 0.5*(28-im.rows);
+    bottom = 28-im.rows-top;
+    right = 0.5*(28-im.cols);
+    left = 28-im.cols-right;
+    copyMakeBorder(im,im, top, bottom, left, right, BORDER_CONSTANT);
+    //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", im);
+    imshow("Contours", im);
+    waitKey(0);
+  }
 }
+
+
+
 
 

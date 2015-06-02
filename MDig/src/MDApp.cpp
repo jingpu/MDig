@@ -21,13 +21,19 @@ std::vector<std::string > MDApp::process_frame(ColorImage& frame)
   cv::Mat grayscaleImage;
   convert_to_grayscale(frame, grayscaleImage);
    
-  std::vector<std::vector<Mat> > numberImages;
-  seg_.segment(grayscaleImage, numberImages);
+  std::vector<cv::Mat> digitPatches;
+  std::vector<std::vector<int> > numberIndices;
+
+  seg_.segment(grayscaleImage, digitPatches, numberIndices);
+  std::vector<char> digits = net_.extract_digits(digitPatches, useBatch_);
 
   std::vector<std::string > result;
-  for (const auto& digitImages : numberImages) {
-    std::vector<char> digits = net_.extract_digits(digitImages, useBatch_);
-    std::string s(digits.begin(), digits.end()); // convert char vector to string
+  // back tracing the indices of digits to form the number strings
+  for(const auto& digitIndices : numberIndices) {
+    size_t stringLen = digitIndices.size();
+    std::string s(stringLen, 'x');
+    for(int i = 0; i < stringLen; ++i)
+      s[i] = digits[digitIndices[i]];
     result.push_back(s);
   }
 
@@ -36,5 +42,5 @@ std::vector<std::string > MDApp::process_frame(ColorImage& frame)
 
 void MDApp::convert_to_grayscale(const ColorImage& colorImage, GrayscaleImage& grayscaleImage)
 {
-    cv::cvtColor(colorImage, grayscaleImage, CV_RGB2GRAY);
+  cv::cvtColor(colorImage, grayscaleImage, CV_RGB2GRAY);
 }
