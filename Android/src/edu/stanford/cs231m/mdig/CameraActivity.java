@@ -195,7 +195,6 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 		builder.setPositiveButton("Continue",
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						// TODO remove the extra image load in java
 						Mat frame = org.opencv.highgui.Highgui
 								.imread(mImagePaths);
 						String[] numbers = HandleFrame(mNativeController,
