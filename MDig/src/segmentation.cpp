@@ -133,8 +133,8 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
                }
            }
         } 
-        imshow("threshold image", output);
-        waitKey(0); 
+        //imshow("threshold image", output);
+        //waitKey(0); 
 }
 
 
@@ -270,8 +270,8 @@ void Segmentation::pad_rescale(vector<Mat>  &patches, int &threshold_value) {
     left = 28-im.cols-right;
     copyMakeBorder(im,im, top, bottom, left, right, BORDER_CONSTANT);
     //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", im);
-    imshow("Contours", im);
-    waitKey(0);
+    //imshow("Contours", im);
+    //waitKey(0);
   }
 }
 

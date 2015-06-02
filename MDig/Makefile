@@ -15,33 +15,30 @@ LDLIBS= -L$(OCV)/lib -lopencv_core -lopencv_highgui \
 SRCS := $(shell find src -name '*.cpp' -not -name '._*')
 OBJS := $(subst .cpp,.o,$(SRCS))
 
-.PHONY: all tests test_convnet test_segment
+.PHONY: all tests test_convnet test_segment test_app
 
 all: tests
 
+# objects
 %.o: %.cpp
 	$(CXX) $(CPPFLAGS) -c $< -o $(basename $@).o
 
-main:  $(OBJS)
-	$(CXX) $(LDFLAGS) -o main $(OBJS) $(LDLIBS)
+# executables
+tests/test_%.out: tests/test_%.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
 
+# run tests
 tests: test_app
 
-test_app:  tests/test_app.o $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
-	./$@
+test_app:  tests/test_app.out
+	./$<
 
+test_convnet:  tests/test_convnet.out
+	./$<
 
-test_convnet:  tests/test_convnet.o $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
-	./$@
+test_segment:  tests/test_segment.out
+	./$<
 
-test_edge:  tests/test_edge.o
-	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
-	./$@  res/real_img.jpg
-
-test_segment:  tests/test_segment.o $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
-	./$@
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'
+	find . -iname "*.out" -exec rm '{}' ';'
