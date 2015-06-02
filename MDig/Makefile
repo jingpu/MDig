@@ -39,6 +39,17 @@ test_convnet:  tests/test_convnet.out
 test_segment:  tests/test_segment.out
 	./$<
 
+test_conv:  tests/test_convnet.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@
+
+test_segment:  tests/test_segment.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@
+
+test_pipeline:  tests/test_pipeline.o $(OBJS)
+	$(CXX) $(LDFLAGS) $^ -o $@  $(LDLIBS)
+	./$@
 clean:
 	find . -iname "*.o" -exec rm '{}' ';'
 	find . -iname "*.out" -exec rm '{}' ';'

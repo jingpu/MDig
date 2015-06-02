@@ -3,6 +3,8 @@
 
 #include <ctime>
 
+using namespace std;
+
 static const char* TAG = "ConvNet";
 
 class ConvNetInput
@@ -109,6 +111,7 @@ ConvNet::get_digit(const ConvNetFeatures& feature){
     }
   }
   
+    cout << max_prob << endl;  
   if(max_idx != -1 && max_prob > threshold_)
     result = (feature.labels[max_idx])[0]; // first char of the label
   else
@@ -136,7 +139,7 @@ ConvNet::get_digits(const ConvNetFeatures& feature){
 	max_idx = j;
       }
     }
-  
+    cout << max_prob << endl;  
     if(max_idx != -1 && max_prob > threshold_)
       c = (feature.labels[max_idx])[0]; // first char of the label
     else

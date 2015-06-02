@@ -11,6 +11,11 @@
 using namespace std;
 using namespace cv;
 
+bool box_compare(Rect a, Rect b) {
+    if (a.x < b.x) return true;
+    else return false;
+}
+
 void Segmentation::segment(Mat image, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices) {
         Mat threshold_output;
         Mat rescale_output;
@@ -73,8 +78,8 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
        // imshow("blur image", edges);
        // waitKey(0);
         Canny(edges, edges, 13, 39, 3);
-       // imshow("edge image", edges);
-       // waitKey(0);
+        imshow("edge image", edges);
+        waitKey(0);
         //output.create(Size(640,480), CV_8UC1); 
         //output = Scalar::all(0);
         //edges.copyTo(output);
@@ -90,11 +95,11 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         } */ 
         vector<Rect> boxes;
         Segmentation:bounding_box(edges, boxes);
-        /*for (int i=0; i < boxes.size(); i++) {
+        for (int i=0; i < boxes.size(); i++) {
             rectangle(edges, boxes[i].tl(), boxes[i].br(), Scalar(100, 100, 100), 2, 8, 0);
         }
-        imwrite("results/edges.jpg", edges);
-        */
+        imshow("bbox edges", edges);
+        waitKey(0);
         for(int i=0; i<output.rows; i++) {
            for(int j=0; j<output.cols; j++) {
               bool in_box = false;
@@ -182,8 +187,8 @@ void Segmentation::merge_box(vector<Rect> &boxes) {
             double hpos_diff = abs((boxes[i].y - boxes[j].y) / (double)boxes[i].height);
             int w_diff = boxes[i].x < boxes[j].x ? boxes[j].x - (boxes[i].x + boxes[i].width) : boxes[i].x - (boxes[j].x + boxes[j].width);
             double wpos_diff = abs((double)w_diff / (boxes[i].width + boxes[j].width) * 2);
-            //cout << height_diff << "  " << hpos_diff << "  " << w_diff << "  " << wpos_diff << endl;
-            if (height_diff < 0.3 && hpos_diff < 0.3 && wpos_diff < 1.5) {
+            //cout << boxes[i].x << " " << boxes[j].x << " " << height_diff << "  " << hpos_diff << "  " << w_diff << "  " << wpos_diff << endl;
+            if (height_diff < 0.5 && hpos_diff < 0.5 && wpos_diff < 1.5) {
               int x = boxes[i].x < boxes[j].x ? boxes[i].x : boxes[j].x;
               int width = (boxes[i].x + boxes[i].width > boxes[j].x + boxes[j].width ? boxes[i].x + boxes[i].width : boxes[j].x + boxes[j].width) - x;
               int y = boxes[i].y < boxes[j].y ? boxes[i].y : boxes[j].y;
@@ -191,12 +196,15 @@ void Segmentation::merge_box(vector<Rect> &boxes) {
               Rect merge(x, y, width, height);
               boxes[i] = merge;
               boxes.erase(boxes.begin() + j);
+              j = i + 1;
             } else {
               j++;
             }
         }
         i++;
-    }              
+    }  
+
+    sort(boxes.begin(), boxes.end(), box_compare);            
 }
 
 void Segmentation::get_digit(const Mat &image, const Mat &thresh_output, const vector<Rect> &boxes, vector<Mat>& digitPatches, vector<vector<int> > &numberIndices) {
@@ -270,10 +278,37 @@ void Segmentation::pad_rescale(vector<Mat>  &patches, int &threshold_value) {
     left = 28-im.cols-right;
     copyMakeBorder(im,im, top, bottom, left, right, BORDER_CONSTANT);
     //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", im);
-    //imshow("Contours", im);
-    //waitKey(0);
+    imshow("Contours", im);
+    waitKey(0);
   }
 }
+ /*
+void Segmentation::pad_rescale(vector<vector<Mat> > &digits, int &threshold_value) {
+   int top, bottom, left, right;
+   //namedWindow("digit", CV_WINDOW_AUTOSIZE);
+   for (int i=0; i<digits.size(); i++){
+       for (int j=0; j<digits[i].size(); j++) {
+           digits[i][j] = Scalar::all(255)- digits[i][j];
+           threshold(digits[i][j], digits[i][j], threshold_value, 255, THRESH_BINARY);
+           int num_row = digits[i][j].rows;
+           int num_col = digits[i][j].cols;
+           cout << num_row << "," << num_col << endl;
+           if (num_row >20 || num_col > 20) {
+              resize(digits[i][j], digits[i][j], Size(20.0, 20), 0,0, INTER_NEAREST);
+           }
+           top = 0.5*(28-digits[i][j].rows);
+           bottom = 28-digits[i][j].rows-top;
+           right = 0.5*(28-digits[i][j].cols);
+           left = 28-digits[i][j].cols-right;
+           copyMakeBorder(digits[i][j],digits[i][j], top, bottom, left, right, BORDER_CONSTANT);
+           imwrite("results/6patch"+to_string(i)+to_string(j)+".jpg", digits[i][j]);
+           imshow("Contours", digits[i][j]);
+           waitKey(0);
+           
+       }
+   } 
+  
+} */
 
 
 

@@ -14,7 +14,7 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-  Mat colorImage = imread("res/real_img.jpg", CV_LOAD_IMAGE_COLOR);
+  Mat colorImage = imread("res/real_img5.jpg", CV_LOAD_IMAGE_COLOR);
   Mat grayscaleImage;
   cv::cvtColor(colorImage, grayscaleImage, CV_RGB2GRAY);
    

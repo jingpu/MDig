@@ -20,7 +20,7 @@ class ConvNet
 {
 public:
     
-  ConvNet(const std::string& network_path, float threshold = 0.5);
+  ConvNet(const std::string& network_path, float threshold = 0.0);
     
   virtual ~ConvNet();
     
