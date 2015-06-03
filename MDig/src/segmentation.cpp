@@ -20,10 +20,20 @@ void Segmentation::segment(Mat image, vector<Mat>& digitPatches, vector<vector<i
         Mat threshold_output;
         Mat rescale_output;
         int threshold_value;       
+    
+        clock_t beginTime;
+        clock_t endTime;
+        double elapsed_secs;
       
+        beginTime = clock();
         //namedWindow("Contours", CV_WINDOW_AUTOSIZE);
         Segmentation::preprocess(image, rescale_output, threshold_output, threshold_value);
+        endTime = clock();
+        elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+        cout << "preprocess:" << elapsed_secs << endl;
+
         vector<Rect> boxes;
+        beginTime = clock();
         Segmentation::bounding_box(threshold_output, boxes);
         Segmentation::merge_box(boxes);
         //for (int i = 0; i < boxes.size(); i++) 
@@ -36,6 +46,11 @@ void Segmentation::segment(Mat image, vector<Mat>& digitPatches, vector<vector<i
         imshow("Contours", rescale_output);       
         waitKey(0);
         */
+        endTime = clock();
+        elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+        cout << "bbox: " << elapsed_secs << endl;
+
+        beginTime = clock();
         Segmentation::get_digit(rescale_output, threshold_output, boxes, digitPatches, numberIndices);
         
         //cout << digits.size() << endl;
@@ -47,10 +62,16 @@ void Segmentation::segment(Mat image, vector<Mat>& digitPatches, vector<vector<i
         //    }
         //}
         Segmentation::pad_rescale(digitPatches, threshold_value);
-  
+        endTime = clock();
+        elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+        cout << "get digit: " << elapsed_secs << endl;
 }
 
 void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int &threshold_value) {
+        clock_t beginTime;
+        clock_t endTime;
+        double elapsed_secs;
+
         if (image.rows > 480 || image.cols > 640) {
             resize(image, rescale_output, Size(640, 480), 0,0, INTER_NEAREST);
         }
@@ -74,18 +95,24 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         waitKey(0); */
         //cout << output << endl;
         Mat edges;
+        beginTime = clock();
         blur(rescale_output, edges, Size(3,3));
        // imshow("blur image", edges);
        // waitKey(0);
         Canny(edges, edges, 13, 39, 3);
-        imshow("edge image", edges);
-        waitKey(0);
+        endTime = clock();
+        elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+        cout << "canny: " << elapsed_secs << endl;
+        //imshow("edge image", edges);
+        //waitKey(0);
         //output.create(Size(640,480), CV_8UC1); 
         //output = Scalar::all(0);
         //edges.copyTo(output);
         //imshow("flip image", output);
         //waitKey(0);
-        output = Scalar::all(255)- rescale_output;
+        Mat output_tmp = Scalar::all(255)- rescale_output;
+        output.create(rescale_output.size(), CV_8UC1);
+        output = Scalar::all(0);
         //adaptiveThreshold(output, output, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,11, 0);
         vector<uchar> pixels;
         /*for(int i=0; i<output.rows; i++) {
@@ -95,13 +122,36 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         } */ 
         vector<Rect> boxes;
         Segmentation:bounding_box(edges, boxes);
-        for (int i=0; i < boxes.size(); i++) {
+        /*for (int i=0; i < boxes.size(); i++) {
             rectangle(edges, boxes[i].tl(), boxes[i].br(), Scalar(100, 100, 100), 2, 8, 0);
         }
         imshow("bbox edges", edges);
-        waitKey(0);
-        for(int i=0; i<output.rows; i++) {
-           for(int j=0; j<output.cols; j++) {
+        waitKey(0);*/
+        beginTime = clock();
+        // reduce image size
+        int top=boxes[0].y;
+        int bottom=boxes[0].y+boxes[0].height;
+        int left=boxes[0].x;
+        int right=boxes[0].x+boxes[0].width;
+
+        for (int k=1; k<boxes.size(); k++) {
+           if(boxes[k].y < top)
+              top = boxes[k].y;
+           if(boxes[k].y+boxes[k].height > bottom)
+              bottom = boxes[k].y+boxes[k].height; 
+           if(boxes[k].x < left)
+              left = boxes[k].x;
+           if(boxes[k].x+boxes[k].width > right)
+              right = boxes[k].x+boxes[k].width;
+        }
+        
+        //imshow("rect",rescale_output(Rect(left, top, right-left, bottom-top)));
+        //waitKey(0);
+        //rescale_output = tmp;
+        //tmp.copyTo(output);
+        
+        for(int i=top; i<=bottom; i++) {
+           for(int j=left; j<=right; j++) {
               bool in_box = false;
               for(int k=0; k<boxes.size(); k++) {
                  if (i>=boxes[k].y && i<=boxes[k].y+boxes[k].height 
@@ -111,14 +161,14 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
                  }
               }
               if (in_box) {
-                 pixels.push_back(output.at<uchar>(i,j));
+                 pixels.push_back(output_tmp.at<uchar>(i,j));
                  /*if (output.at<uchar>(i,j) < white_threshold)
                     output.at<uchar>(i,j) = 0;
                  else
                     output.at<uchar>(i,j)=255; */
               }
-              else 
-                    output.at<uchar>(i,j)=0;
+              //else 
+             //       output.at<uchar>(i,j)=0;
            } 
         }
         double sum = accumulate(pixels.begin(), pixels.end(),0.0);
@@ -129,15 +179,20 @@ void Segmentation::preprocess(Mat &image, Mat &rescale_output, Mat &output, int 
         threshold_value = mean+stdev/2;      
   
         for(int k=0; k<boxes.size(); k++) {
-           for (int i=boxes[k].y; i<=boxes[k].y+boxes[k].height; i++ ) {
+           threshold(output_tmp(boxes[k]), output_tmp(boxes[k]), threshold_value, 255, THRESH_BINARY);   
+           output_tmp(boxes[k]).copyTo(output(boxes[k])); 
+           /*for (int i=boxes[k].y; i<=boxes[k].y+boxes[k].height; i++ ) {
                for (int j=boxes[k].x; j<=boxes[k].x+boxes[k].width; j++) {
                    if (output.at<uchar>(i,j) < threshold_value) {
                       output.at<uchar>(i,j) = 0;
                    }else 
                       output.at<uchar>(i,j) =255;
                }
-           }
-        } 
+           }*/
+        }
+        endTime = clock();
+        elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
+        cout << "scan image: " << elapsed_secs << endl;
         //imshow("threshold image", output);
         //waitKey(0); 
 }
@@ -278,8 +333,8 @@ void Segmentation::pad_rescale(vector<Mat>  &patches, int &threshold_value) {
     left = 28-im.cols-right;
     copyMakeBorder(im,im, top, bottom, left, right, BORDER_CONSTANT);
     //imwrite("results/patch"+to_string(i)+to_string(j)+".jpg", im);
-    imshow("Contours", im);
-    waitKey(0);
+    //imshow("Contours", im);
+    //waitKey(0);
   }
 }
  /*
