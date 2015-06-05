@@ -17,7 +17,7 @@ LOCAL_C_INCLUDES += ./src/lib/include \
 #$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.8/include \
 #$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.8/libs/armeabi/include
 
-LOCAL_CFLAGS := -DUSE_EIGEN_GEMM -DUSE_NEON
+LOCAL_CFLAGS := -DUSE_EIGEN_GEMM -DUSE_NEON -DEIGEN_DONT_PARALLELIZE
 LOCAL_CFLAGS += -mfloat-abi=softfp -mfpu=neon -march=armv7
 
 LOCAL_CFLAGS += -fopenmp -O3
