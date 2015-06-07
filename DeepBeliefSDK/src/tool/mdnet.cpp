@@ -15,6 +15,8 @@
 #include "math.h"
 #include "matrix_ops.h"
 
+using namespace std;
+
 Buffer* buffer_from_ocarray(const Array<real_4>& array, const std::vector<int32_t> dim) {
   int32_t dimensionsCount = dim.size();
   const int32_t *dimensions = &dim[0];
@@ -34,7 +36,6 @@ Buffer* buffer_from_ocarray(const Array<real_4>& array, const std::vector<int32_
   
   return buffer;
 }
-
 
 Graph* new_graph_from_scratch(){
   // manually create a network. see reference: graph.cpp:new_graph_from_file()

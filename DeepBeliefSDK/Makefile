@@ -5,7 +5,7 @@ CPPFLAGS=
 
 .PRECIOUS: %.cdat
 
-LIBCPPFLAGS= -Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g
+LIBCPPFLAGS= -Ofast -I ./src/lib/include -I ./src/lib/graph -I ./src/lib/math -I ./src/lib/third_party -I ./src/lib/utility -I ./src/lib/svm -I ./src/lib/opengl -I ./src/lib -I ./src/include -g 
 LIBLDFLAG=
 LIBLDLIBS=
 
@@ -30,7 +30,7 @@ LIBLDLIBS += -lblas
 endif
 
 ifeq ($(GEMM),eigen)
-LIBCPPFLAGS += -I../eigen -DUSE_EIGEN_GEMM=1 
+LIBCPPFLAGS += -I../eigen -DUSE_EIGEN_GEMM=1  -DEIGEN_DONT_PARALLELIZE
 endif
 
 ifeq ($(TARGET),pi)
