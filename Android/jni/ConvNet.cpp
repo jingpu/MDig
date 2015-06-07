@@ -1,9 +1,22 @@
 #include "ConvNet.hpp"
 #include "DeepBelief/libjpcnn.h"
 
-#include <ctime>
+#include <time.h>
+
 
 static const char* TAG = "ConvNet";
+
+// from android samples
+/* return current time in milliseconds */
+static inline double now_ms(void) {
+
+    struct timespec res;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &res);
+    //clock_gettime(CLOCK_THREAD_CPUTIME_ID, &res);
+    //clock_gettime(CLOCK_MONOTONIC, &res);
+    return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
+
+}
 
 class ConvNetInput
 {
@@ -79,9 +92,20 @@ ConvNetFeatures ConvNet::extract_features(const GrayscaleImage& image)
 
 ConvNetFeatures ConvNet::extract_batched_features(const std::vector<GrayscaleImage>& images)
 {
-  ConvNetFeatures features = {.features = nullptr, .length = 0, .labels = nullptr, .labelsLength = 0};
-  ConvNetInput input(images);
+	  double beginTime;
+	  double endTime;
+	  double elapsed_ms;
 
+  ConvNetFeatures features = {.features = nullptr, .length = 0, .labels = nullptr, .labelsLength = 0};
+  beginTime = now_ms();
+  ConvNetInput input(images);
+  endTime = now_ms();
+  elapsed_ms = double(endTime - beginTime)/1;
+  //LOG_DEBUG(TAG, "prepare input %.1f msec.", elapsed_ms);
+
+
+
+  beginTime = now_ms();
   jpcnn_classify_image(net_,
 		       input.data,
 		       JPCNN_SKIP_RESCALE,
@@ -90,6 +114,10 @@ ConvNetFeatures ConvNet::extract_batched_features(const std::vector<GrayscaleIma
 		       &(features.length),
 		       &(features.labels),
 		       &(features.labelsLength));
+
+  endTime = now_ms();
+  elapsed_ms = double(endTime - beginTime)/1;
+  //LOG_DEBUG(TAG, "jpcnn_classify_image %.1f msec.", elapsed_ms);
 
   return features;
 }
@@ -112,7 +140,7 @@ ConvNet::get_digit(const ConvNetFeatures& feature){
   if(max_idx != -1 && max_prob > threshold_)
     result = (feature.labels[max_idx])[0]; // first char of the label
   else
-    result = 0;
+    result = 'x';
 
   return result;
 }
@@ -125,7 +153,7 @@ ConvNet::get_digits(const ConvNetFeatures& feature){
   
   const int numOfDigits = feature.length / feature.labelsLength;
   for (int i = 0; i < numOfDigits; ++i) {
-    char c = 0;
+    char c;
     
     int max_idx = -1;
     float max_prob = 0;
@@ -136,9 +164,10 @@ ConvNet::get_digits(const ConvNetFeatures& feature){
 	max_idx = j;
       }
     }
-  
     if(max_idx != -1 && max_prob > threshold_)
       c = (feature.labels[max_idx])[0]; // first char of the label
+    else
+      c = 'x';
 
     result.push_back(c);
   }
@@ -158,12 +187,22 @@ ConvNet::extract_digits(const std::vector<GrayscaleImage>& images, bool useBatch
       result.push_back(get_digit(features));
     }
   } else {
-    ConvNetFeatures features = extract_batched_features(images);   
+    ConvNetFeatures features = extract_batched_features(images);
+
+	  double beginTime;
+	  double endTime;
+	  double elapsed_ms;
+	  beginTime = now_ms();
+
     result = get_digits(features);
+
+    endTime = now_ms();
+    elapsed_ms = double(endTime - beginTime)/1;
+    //LOG_DEBUG(TAG, "get_digits() %.1f msec.", elapsed_ms);
   }
 
   clock_t endTime = clock();
   double elapsed_secs = double(endTime - beginTime) / CLOCKS_PER_SEC;
-  LOG_DEBUG(TAG, "extracted %d digit(s) in %f sec.", images.size(), elapsed_secs);
+  //LOG_DEBUG(TAG, "extracted %d digit(s) in %f sec.", images.size(), elapsed_secs);
   return result;
 }

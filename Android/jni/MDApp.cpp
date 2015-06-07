@@ -1,13 +1,27 @@
 #include "MDApp.hpp"
 
 #include "ResourceLocator.hpp"
+#include <time.h>
   
 static const char* TAG = "MDApp";
+
+// from android samples
+/* return current time in milliseconds */
+static inline double now_ms(void) {
+
+    struct timespec res;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &res);
+    //clock_gettime(CLOCK_THREAD_CPUTIME_ID, &res);
+    //clock_gettime(CLOCK_MONOTONIC, &res);
+    return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
+
+}
+
 
 MDApp::MDApp() : net_(PathForResource("mdnet.ntwk"))
 {
     has_been_initialized_ = true;
-    useBatch_ = true;
+    useBatch_ = false;
 }
     
 void MDApp::initialize()
@@ -18,21 +32,35 @@ void MDApp::initialize()
 
 std::vector<std::string > MDApp::process_frame(ColorImage& frame)
 {
-  LOG_DEBUG(TAG, "enter process_frame()");
+  double beginTime;
+  double endTime;
+  double elapsed_ms;
+
   assert(has_been_initialized_ && "Must be initialized before calling process_frame!");
   cv::Mat grayscaleImage;
   convert_to_grayscale(frame, grayscaleImage);
    
-  std::vector<std::vector<Mat> > numberImages;
-  seg_.segment(grayscaleImage, numberImages);
+  std::vector<cv::Mat> digitPatches;
+  std::vector<std::vector<int> > numberIndices;
+  seg_.segment(grayscaleImage, digitPatches, numberIndices);
+
+
+  beginTime = now_ms();
+  std::vector<char> digits;
+  for (int i = 0; i < 1; ++i)
+    digits = net_.extract_digits(digitPatches, useBatch_);
+  endTime = now_ms();
+  elapsed_ms = double(endTime - beginTime)/1;
+  LOG_DEBUG(TAG, "recognition %.1f msec.", elapsed_ms);
 
   std::vector<std::string > result;
-  for (const auto& digitImages : numberImages) {
-    std::vector<char> digits = net_.extract_digits(digitImages, useBatch_);
-    std::string s(digits.begin(), digits.end()); // convert char vector to string
+  // back tracing the indices of digits to form the number strings
+  for(const auto& digitIndices : numberIndices) {
+    size_t stringLen = digitIndices.size();
+    std::string s(stringLen, 'x');
+    for(int i = 0; i < stringLen; ++i)
+      s[i] = digits[digitIndices[i]];
     result.push_back(s);
-
-    LOG_DEBUG(TAG, "extracted number: %s", s.c_str());
   }
 
   return result;

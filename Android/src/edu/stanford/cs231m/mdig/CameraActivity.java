@@ -183,6 +183,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
     {
 		takePicture();
 
+		// mCameraView.disableView();
 		// File picDir = getPictureStorageDir();
 		// File picFile = new File(picDir, "test.jpg");
 		// mImagePaths = picFile.getPath();
@@ -199,6 +200,9 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 								.imread(mImagePaths);
 						String[] numbers = HandleFrame(mNativeController,
 								frame.getNativeObjAddr(), mRequiresInit);
+						for (int i = 0; i < 5; ++i)
+							HandleFrame(mNativeController,
+									frame.getNativeObjAddr(), mRequiresInit);
 
 						StringBuilder sb = new StringBuilder(String.format(
 								"Find %d number:\n", numbers.length));
@@ -208,6 +212,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, O
 						resultbuilder.setMessage(sb);
 						AlertDialog resultDialog = resultbuilder.create();
 						resultDialog.show();
+
+						// mCameraView.enableView();
 					}
 				});
 		builder.setNegativeButton("Restart",

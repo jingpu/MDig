@@ -4,6 +4,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := jpcnn
 LOCAL_SRC_FILES := DeepBelief/libjpcnn.so
+#LOCAL_SRC_FILES := DeepBelief/libjpcnn.batch.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 # Tegra optimized OpenCV.mk
